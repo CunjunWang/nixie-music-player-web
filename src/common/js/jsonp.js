@@ -1,4 +1,5 @@
 // Created by CunjunWang on 2019-05-08
+// 封装jsonp接口
 
 import originJSONP from 'jsonp'
 
