@@ -137,8 +137,8 @@
         })
       },
       _onScrollEnd () {
-        let pageIndex = this.slider.getCurrentPage().pageX
-        this.currentPageIndex = pageIndex
+        // let pageIndex = this.slider.getCurrentPage().pageX
+        this.currentPageIndex = this.slider.getCurrentPage().pageX
         // 每次自动轮播前要clear一次
         // 场景: 用户手动拖动了一下轮播, 由于timer机制会跳到上一张图再轮播回来
         if (this.autoPlay) {
