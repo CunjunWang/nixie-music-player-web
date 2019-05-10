@@ -1,23 +1,35 @@
 <template>
   <div class="recommend">
-    <div class="recommend-content">
-      <!-- 添加v-if: 因为recommends是异步获取数据, 确保recommends有数据后再执行后续操作.
+    <scroll ref="scroll" class="recommend-content" :data="discList">
+      <div>
+        <!-- 添加v-if: 因为recommends是异步获取数据, 确保recommends有数据后再执行后续操作.
        最明显的坑就是在slider.vue的mounted方法中, 由于recommends没数据而遍历先结束了,
        导致添加的css效果出不来 -->
-      <div v-if="recommends.length" class="slider-wrapper">
-        <slider>
-          <div v-for="item in recommends">
-            <a :href="item.linkUrl">
-              <img :src="item.picUrl"/>
-            </a>
-          </div>
-        </slider>
+        <div v-if="recommends.length" class="slider-wrapper">
+          <slider>
+            <div v-for="item in recommends">
+              <a :href="item.linkUrl">
+                <img @load="loadImage" :src="item.picUrl"/>
+              </a>
+            </div>
+          </slider>
+        </div>
+        <div class="recommend-list">
+          <h1 class="list-title">热门歌单推荐</h1>
+          <ul>
+            <li v-for="item in discList" class="item">
+              <div class="icon">
+                <img width="60" height="60" :src="item.imgurl"/>
+              </div>
+              <div class="text">
+                <h2 class="name" v-html="item.creator.name"></h2>
+                <p class="desc" v-html="item.dissname"></p>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
-      <div class="recommend-list">
-        <h1 class="list-title">热门歌单推荐</h1>
-        <ul></ul>
-      </div>
-    </div>
+    </scroll>
   </div>
 </template>
 
@@ -25,11 +37,13 @@
   import {getRecommend, getDiscList} from '../../api/recommend'
   import {ERR_OK} from '../../api/config'
   import Slider from '../../base/slider/slider'
+  import Scroll from '../../base/scroll/scroll'
 
   export default {
     data () {
       return {
-        recommends: []
+        recommends: [],
+        discList: []
       }
     },
     created () {
@@ -47,13 +61,20 @@
       _getDiscList () {
         getDiscList().then((res) => {
           if (res.code === ERR_OK) {
-            console.log(res.data.list)
+            this.discList = res.data.list
           }
         })
+      },
+      loadImage () {
+        if (!this.checkLoaded) {
+          this.$refs.scroll.refresh()
+          this.checkLoaded = true
+        }
       }
     },
     components: {
-      Slider
+      Slider,
+      Scroll
     }
   }
 </script>
