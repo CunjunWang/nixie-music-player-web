@@ -25,14 +25,41 @@ var app = express()
 
 var apiRoutes = express.Router()
 apiRoutes.get('/getDiscList', function (req, res) {
-  var url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
-  axios.get(url, {
-    headers: {
-      referer: 'https://c.y.qq.com/',
-      host: 'c.y.qq.com'
-    },
-    params: req.query
-  }).then((response) => {
+  // var url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
+  // axios.get(url, {
+  //   headers: {
+  //     referer: 'https://c.y.qq.com/',
+  //     host: 'c.y.qq.com'
+  //   },
+  //   params: req.query
+  // }).then((response) => {
+  //   res.json(response.data)
+  // }).catch((e) => {
+  //   console.log(e)
+  // })
+  var url = 'http://localhost:9588/recommend/discList'
+  axios.get(url).then((response) => {
+    res.json(response.data)
+  }).catch((e) => {
+    console.log(e)
+  })
+})
+
+apiRoutes.get('/getCarouselList', function (req, res) {
+  // var url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
+  // axios.get(url, {
+  //   headers: {
+  //     referer: 'https://c.y.qq.com/',
+  //     host: 'c.y.qq.com'
+  //   },
+  //   params: req.query
+  // }).then((response) => {
+  //   res.json(response.data)
+  // }).catch((e) => {
+  //   console.log(e)
+  // })
+  var url = 'http://localhost:9588/recommend/carousel'
+  axios.get(url).then((response) => {
     res.json(response.data)
   }).catch((e) => {
     console.log(e)

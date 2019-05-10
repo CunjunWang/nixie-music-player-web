@@ -39,7 +39,7 @@
 <script type="text/ecmascript-6">
   import Loading from '../../base/loading/loading'
   import {getRecommend, getDiscList} from '../../api/recommend'
-  import {ERR_OK} from '../../api/config'
+  // import {ERR_OK} from '../../api/config'
   import Slider from '../../base/slider/slider'
   import Scroll from '../../base/scroll/scroll'
 
@@ -57,15 +57,15 @@
     methods: {
       _getRecommend () {
         getRecommend().then((res) => {
-          if (res.code === ERR_OK) {
-            this.recommends = res.data.slider
+          if (res.status === 1) {
+            this.recommends = res.data
           }
         })
       },
       _getDiscList () {
         getDiscList().then((res) => {
-          if (res.code === ERR_OK) {
-            this.discList = res.data.list
+          if (res.status === 1) {
+            this.discList = res.data
           }
         })
       },
