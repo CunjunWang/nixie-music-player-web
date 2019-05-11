@@ -12,6 +12,7 @@ var webpack = require('webpack')
 var proxyMiddleware = require('http-proxy-middleware')
 var webpackConfig = require('./webpack.dev.conf')
 var axios = require('axios')
+var apiRoutes = require('../src/router/routes')
 
 // default port where dev server listens for incoming traffic
 var port = process.env.PORT || config.dev.port
@@ -22,50 +23,6 @@ var autoOpenBrowser = !!config.dev.autoOpenBrowser
 var proxyTable = config.dev.proxyTable
 
 var app = express()
-
-var apiRoutes = express.Router()
-apiRoutes.get('/getDiscList', function (req, res) {
-  // var url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
-  // axios.get(url, {
-  //   headers: {
-  //     referer: 'https://c.y.qq.com/',
-  //     host: 'c.y.qq.com'
-  //   },
-  //   params: req.query
-  // }).then((response) => {
-  //   res.json(response.data)
-  // }).catch((e) => {
-  //   console.log(e)
-  // })
-  var url = 'http://localhost:9588/recommend/discList'
-  axios.get(url).then((response) => {
-    res.json(response.data)
-  }).catch((e) => {
-    console.log(e)
-  })
-})
-
-apiRoutes.get('/getCarouselList', function (req, res) {
-  // var url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
-  // axios.get(url, {
-  //   headers: {
-  //     referer: 'https://c.y.qq.com/',
-  //     host: 'c.y.qq.com'
-  //   },
-  //   params: req.query
-  // }).then((response) => {
-  //   res.json(response.data)
-  // }).catch((e) => {
-  //   console.log(e)
-  // })
-  var url = 'http://localhost:9588/recommend/carousel'
-  axios.get(url).then((response) => {
-    res.json(response.data)
-  }).catch((e) => {
-    console.log(e)
-  })
-})
-
 app.use('/api', apiRoutes)
 
 var compiler = webpack(webpackConfig)
