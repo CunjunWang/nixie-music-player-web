@@ -79,7 +79,7 @@
           return group.title.substr(0, 1)
         })
       },
-      fixedTitle() {
+      fixedTitle () {
         if (this.scrollY > 0) {
           return ''
         }
@@ -104,7 +104,7 @@
         let anchorIndex = parseInt(this.touch.anchorIndex) + delta
         this._scrollTo(anchorIndex)
       },
-      refresh() {
+      refresh () {
         this.$refs.listview.refresh()
       },
       scroll (pos) {

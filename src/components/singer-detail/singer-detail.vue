@@ -5,8 +5,29 @@
 </template>
 
 <script type="text/ecmascript-6">
+  import {mapGetters} from 'vuex'
+  import {getSingerDetail} from '../../api/singer'
+  import {ERR_OK} from '../../api/config'
+
   export default {
-    name: 'singer-detail'
+    computed: {
+      ...mapGetters([
+        // 对应store getters里面的singer
+        'singer'
+      ])
+    },
+    created () {
+      this._getDetail()
+    },
+    methods: {
+      _getDetail () {
+        getSingerDetail(this.singer.id).then((res) => {
+          if (res.code === ERR_OK) {
+            console.log(res.data.list)
+          }
+        })
+      }
+    }
   }
 </script>
 
