@@ -8,8 +8,14 @@
   import {mapGetters} from 'vuex'
   import {getSingerDetail} from '../../api/singer'
   import {ERR_OK} from '../../api/config'
+  import {createSong} from '../../common/js/song'
 
   export default {
+    data () {
+      return {
+        songs: []
+      }
+    },
     computed: {
       ...mapGetters([
         // 对应store getters里面的singer
@@ -21,11 +27,27 @@
     },
     methods: {
       _getDetail () {
+        if (!this.singer.id) {
+          // 在详情页刷新, 回退到歌手页
+          this.$router.push('/singer')
+          return
+        }
         getSingerDetail(this.singer.id).then((res) => {
           if (res.code === ERR_OK) {
-            console.log(res.data.list)
+            this.songs = this._normalizeSongs(res.data.list)
+            console.log(this.songs)
           }
         })
+      },
+      _normalizeSongs (list) {
+        let ret = []
+        list.forEach((item) => {
+          let {musicData} = item
+          if (musicData.songid && musicData.albummid) {
+            ret.push(createSong(musicData))
+          }
+        })
+        return ret
       }
     }
   }
