@@ -18,10 +18,10 @@
       }
     },
     computed: {
-      title() {
+      title () {
         return this.singer.name
       },
-      bgImage() {
+      bgImage () {
         return this.singer.avatar
       },
       ...mapGetters([
@@ -66,4 +66,9 @@
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~common/stylus/variable"
 
+  .slide-enter-active, .slide-leave-active
+    transition all 0.3s
+
+  .slide-enter, .slide-leave-to
+    transform translate3d(100%, 0, 0)
 </style>
