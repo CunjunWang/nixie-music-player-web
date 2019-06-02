@@ -1,5 +1,7 @@
 // Created by CunjunWang on 2019-05-25
 
+import {getSongsUrl} from '../../api/songs'
+
 export default class Song {
   constructor ({id, mid, singer, name, album, duration, image, url}) {
     this.id = id
@@ -9,6 +11,7 @@ export default class Song {
     this.album = album
     this.duration = duration
     this.image = image
+    this.filename = `C400${this.mid}.m4a`
     this.url = url
   }
 }
@@ -27,7 +30,24 @@ export function createSong (musicData) {
   })
 }
 
-function filterSinger(singer) {
+export function processSongsUrl (songs) {
+  if (!songs.length) {
+    return Promise.resolve(songs)
+  }
+  return getSongsUrl(songs).then((purlMap) => {
+    songs = songs.filter((song) => {
+      const purl = purlMap[song.mid]
+      if (purl) {
+        song.url = purl.indexOf('http') === -1 ? `http://dl.stream.qqmusic.qq.com/${purl}` : purl
+        return true
+      }
+      return false
+    })
+    return songs
+  })
+}
+
+function filterSinger (singer) {
   let ret = []
   if (!singer) {
     return ''
