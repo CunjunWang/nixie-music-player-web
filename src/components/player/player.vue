@@ -4,8 +4,7 @@
                 @enter="enter"
                 @after-enter="afterEnter"
                 @leave="leave"
-                @after-leave="afterLeave"
-    >
+                @after-leave="afterLeave">
       <div class="normal-player" v-show="fullScreen">
         <div class="background">
           <img width="100%" height="100%" :src="currentSong.image">
@@ -20,25 +19,35 @@
         <div class="middle">
           <div class="middle-l">
             <div class="cd-wrapper" ref="cdWrapper">
-              <div class="cd">
-                <img class="image" :src="currentSong.image">
+              <div class="cd" ref="imageWrapper">
+                <img ref="image" class="image" :class="cdCls" :src="currentSong.image">
               </div>
             </div>
           </div>
         </div>
         <div class="bottom">
+          <div class="progress-wrapper">
+            <span class="time time-l">{{format(currentTime)}}</span>
+            <div class="progress-bar-wrapper">
+              <progress-bar ref="progressBar"
+                            :percent="percent"
+                            @percentChange="onProgressBarChange">
+              </progress-bar>
+            </div>
+            <span class="time time-r">{{format(currentSong.duration)}}</span>
+          </div>
           <div class="operators">
-            <div class="icon i-left">
-              <i class="icon-sequence"></i>
+            <div class="icon i-left" @click="changeMode">
+              <i :class="iconMode"></i>
             </div>
-            <div class="icon i-left">
-              <i class="icon-prev"></i>
+            <div class="icon i-left" :class="disableCls">
+              <i @click="prev" class="icon-prev"></i>
             </div>
-            <div class="icon i-center">
-              <i class="icon-play"></i>
+            <div class="icon i-center" :class="disableCls">
+              <i @click="togglePlaying" :class="playIcon"></i>
             </div>
-            <div class="icon i-right">
-              <i class="icon-next"></i>
+            <div class="icon i-right" :class="disableCls">
+              <i @click="next" class="icon-next"></i>
             </div>
             <div class="icon i-right">
               <i class="icon icon-not-favorite"></i>
@@ -50,19 +59,29 @@
     <transition name="mini">
       <div class="mini-player" v-show="!fullScreen" @click="open">
         <div class="icon">
-          <img width="40" height="40" :src="currentSong.image">
+          <div class="imgWrapper" ref="miniWrapper">
+            <img ref="miniImage" :class="cdCls" width="40"
+                 height="40" :src="currentSong.image">
+          </div>
         </div>
         <div class="text">
           <h2 class="name" v-html="currentSong.name"></h2>
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
         <div class="control">
+          <!-- 子元素点击事件, 会冒泡到父元素上, 父元素也有个open点击事件
+         会打开播放器层, 需要阻止默认冒泡-->
+          <progress-circle :radius="radius" :percent="percent">
+            <i @click.stop="togglePlaying" class="icon-mini" :class="miniIcon"></i>
+          </progress-circle>
         </div>
         <div class="control">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
+    <audio ref="audio" @playing="ready" @error="error" :src="currentSong.url"
+           @timeupdate="updateTime" @pause="paused" @ended="end"></audio>
   </div>
 </template>
 
@@ -70,16 +89,52 @@
   import {mapGetters, mapMutations} from 'vuex'
   import animations from 'create-keyframe-animation'
   import {prefixStyle} from '../../common/js/jsonp'
+  import ProgressBar from '../../base/progress-bar/progress-bar'
+  import ProgressCircle from '../../base/progress-circle/progress-circle'
+  import {playMode} from '../../common/js/config'
+  import {shuffle} from '../../common/js/utils'
 
   const transform = prefixStyle('transform')
 
   export default {
+    data () {
+      return {
+        radius: 32,
+        songReady: false,
+        currentTime: 0
+      }
+    },
     computed: {
+      cdCls () {
+        return this.playing ? 'play' : ''
+      },
+      playIcon () {
+        return this.playing ? 'icon-pause' : 'icon-play'
+      },
+      miniIcon () {
+        return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+      },
+      disableCls () {
+        return this.songReady ? '' : 'disable'
+      },
+      percent () {
+        return this.currentTime / this.currentSong.duration
+      },
+      iconMode () {
+        return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
+      },
       ...mapGetters([
         'fullScreen',
         'playList',
-        'currentSong'
+        'currentSong',
+        'playing',
+        'currentIndex',
+        'mode',
+        'sequenceList'
       ])
+    },
+    created () {
+      this.touch = {}
     },
     methods: {
       back () {
@@ -125,6 +180,111 @@
         this.$refs.cdWrapper.style.transition = ''
         this.$refs.cdWrapper.style[transform] = ''
       },
+      togglePlaying () {
+        if (!this.songReady) {
+          return
+        }
+        this.setPlayingState(!this.playing)
+      },
+      end () {
+        this.currentTime = 0
+        if (this.mode === playMode.loop) {
+          this.loop()
+        } else {
+          this.next()
+        }
+      },
+      loop () {
+        this.$refs.audio.currentTime = 0
+        this.$refs.audio.play()
+        this.setPlayingState(true)
+      },
+      next () {
+        if (!this.songReady) {
+          return
+        }
+        if (this.playList.length === 1) {
+          this.loop()
+        } else {
+          let index = this.currentIndex + 1
+          if (index === this.playList.length) {
+            index = 0
+          }
+          this.setCurrentIndex(index)
+          if (!this.playing) {
+            this.togglePlaying()
+          }
+        }
+      },
+      prev () {
+        if (!this.songReady) {
+          return
+        }
+        if (this.playList.length === 1) {
+          this.loop()
+        } else {
+          let index = this.currentIndex - 1
+          if (index === -1) {
+            index = this.playList.length - 1
+          }
+          this.setCurrentIndex(index)
+          if (!this.playing) {
+            this.togglePlaying()
+          }
+        }
+      },
+      ready () {
+        this.songReady = true
+      },
+      paused () {
+        this.setPlayingState(false)
+      },
+      error () {
+        this.songReady = true
+      },
+      updateTime (e) {
+        this.currentTime = e.target.currentTime
+      },
+      format (interval) {
+        // 正数向下取整
+        interval = interval | 0
+        const minute = (interval / 60) | 0
+        const second = this._pad(interval % 60)
+        return `${minute}:${second}`
+      },
+      onProgressBarChange (percent) {
+        const currentTime = this.currentSong.duration * percent
+        this.currentTime = this.$refs.audio.currentTime = currentTime
+        if (!this.playing) {
+          this.togglePlaying()
+        }
+      },
+      changeMode () {
+        const mode = (this.mode + 1) % 3
+        this.setPlayMode(mode)
+        let list = null
+        if (mode === playMode.random) {
+          list = shuffle(this.sequenceList)
+        } else {
+          list = this.sequenceList
+        }
+        this.resetCurrentIndex(list)
+        this.setPlayList(list)
+      },
+      resetCurrentIndex (list) {
+        let index = list.findIndex((item) => {
+          return item.id === this.currentSong.id
+        })
+        this.setCurrentIndex(index)
+      },
+      _pad (num, n = 2) {
+        let len = num.toString().length
+        while (len < n) {
+          num = '0' + num
+          len++
+        }
+        return num
+      },
       _getPosAndScale () {
         const targetWidth = 40
         const paddingLeft = 40
@@ -138,9 +298,68 @@
           x, y, scale
         }
       },
+      /**
+       * 计算内层Image的transform，并同步到外层容器
+       * @param wrapper
+       * @param inner
+       */
+      syncWrapperTransform (wrapper, inner) {
+        if (!this.$refs[wrapper]) {
+          return
+        }
+        let imageWrapper = this.$refs[wrapper]
+        let image = this.$refs[inner]
+        let wTransform = getComputedStyle(imageWrapper)[transform]
+        let iTransform = getComputedStyle(image)[transform]
+        imageWrapper.style[transform] = wTransform === 'none' ? iTransform : iTransform.concat(' ', wTransform)
+      },
       ...mapMutations({
-        setFullScreen: 'SET_FULL_SCREEN'
+        setFullScreen: 'SET_FULL_SCREEN',
+        setPlayingState: 'SET_PLAYING_STATE',
+        setCurrentIndex: 'SET_CURRENT_INDEX',
+        setPlayMode: 'SET_PLAY_MODE',
+        setPlayList: 'SET_PLAY_LIST'
       })
+    },
+    watch: {
+      currentSong (newSong, oldSong) {
+        if (!newSong.id || !newSong.url || newSong.id === oldSong.id) {
+          return
+        }
+        this.songReady = false
+        this.$refs.audio.src = newSong.url
+        this.$refs.audio.play()
+        this.$nextTick(() => {
+          this.$refs.audio.play()
+        })
+      },
+      playing (newPlaying) {
+        if (!this.songReady) {
+          return
+        }
+        const audio = this.$refs.audio
+        this.$nextTick(() => {
+          newPlaying ? audio.play() : audio.pause()
+        })
+        if (!newPlaying) {
+          if (this.fullScreen) {
+            this.syncWrapperTransform('imageWrapper', 'image')
+          } else {
+            this.syncWrapperTransform('miniWrapper', 'miniImage')
+          }
+        }
+      },
+      fullScreen (newVal) {
+        if (newVal) {
+          setTimeout(() => {
+            this.$refs.progressBar.setProgressOffset(this.percent)
+          }, 20)
+        }
+      }
+    },
+    components: {
+      ProgressBar,
+      ProgressCircle
     }
   }
 </script>
