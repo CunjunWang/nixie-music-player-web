@@ -71,7 +71,9 @@
         <div class="control">
           <!-- 子元素点击事件, 会冒泡到父元素上, 父元素也有个open点击事件
          会打开播放器层, 需要阻止默认冒泡-->
-          <i @click.stop="togglePlaying" class="icon-play-mini" :class="miniIcon"></i>
+          <progress-circle :radius="radius" :percent="percent">
+            <i @click.stop="togglePlaying" class="icon-play-mini" :class="miniIcon"></i>
+          </progress-circle>
         </div>
         <div class="control">
           <i class="icon-playlist"></i>
@@ -88,12 +90,14 @@
   import animations from 'create-keyframe-animation'
   import {prefixStyle} from '../../common/js/jsonp'
   import ProgressBar from '../../base/progress-bar/progress-bar'
+  import ProgressCircle from '../../base/progress-circle/progress-circle'
 
   const transform = prefixStyle('transform')
 
   export default {
     data () {
       return {
+        radius: 32,
         songReady: false,
         currentTime: 0
       }
@@ -263,7 +267,8 @@
       }
     },
     components: {
-      ProgressBar
+      ProgressBar,
+      ProgressCircle
     }
   }
 </script>
