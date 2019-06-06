@@ -37,8 +37,8 @@
             <span class="time time-r">{{format(currentSong.duration)}}</span>
           </div>
           <div class="operators">
-            <div class="icon i-left">
-              <i class="icon-sequence"></i>
+            <div class="icon i-left" @click="changeMode">
+              <i :class="iconMode"></i>
             </div>
             <div class="icon i-left" :class="disableCls">
               <i @click="prev" class="icon-prev"></i>
@@ -59,7 +59,7 @@
     <transition name="mini">
       <div class="mini-player" v-show="!fullScreen" @click="open">
         <div class="icon">
-          <div class="imgWrapper">
+          <div class="imgWrapper" ref="miniWrapper">
             <img ref="miniImage" :class="cdCls" width="40"
                  height="40" :src="currentSong.image">
           </div>
@@ -72,7 +72,7 @@
           <!-- 子元素点击事件, 会冒泡到父元素上, 父元素也有个open点击事件
          会打开播放器层, 需要阻止默认冒泡-->
           <progress-circle :radius="radius" :percent="percent">
-            <i @click.stop="togglePlaying" class="icon-play-mini" :class="miniIcon"></i>
+            <i @click.stop="togglePlaying" class="icon-mini" :class="miniIcon"></i>
           </progress-circle>
         </div>
         <div class="control">
@@ -80,8 +80,8 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error"
-           @timeupdate="updateTime"></audio>
+    <audio ref="audio" @playing="ready" @error="error" :src="currentSong.url"
+           @timeupdate="updateTime" @pause="paused" @ended="end"></audio>
   </div>
 </template>
 
@@ -91,6 +91,8 @@
   import {prefixStyle} from '../../common/js/jsonp'
   import ProgressBar from '../../base/progress-bar/progress-bar'
   import ProgressCircle from '../../base/progress-circle/progress-circle'
+  import {playMode} from '../../common/js/config'
+  import {shuffle} from '../../common/js/utils'
 
   const transform = prefixStyle('transform')
 
@@ -118,13 +120,21 @@
       percent () {
         return this.currentTime / this.currentSong.duration
       },
+      iconMode () {
+        return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
+      },
       ...mapGetters([
         'fullScreen',
         'playList',
         'currentSong',
         'playing',
-        'currentIndex'
+        'currentIndex',
+        'mode',
+        'sequenceList'
       ])
+    },
+    created () {
+      this.touch = {}
     },
     methods: {
       back () {
@@ -176,36 +186,58 @@
         }
         this.setPlayingState(!this.playing)
       },
+      end () {
+        this.currentTime = 0
+        if (this.mode === playMode.loop) {
+          this.loop()
+        } else {
+          this.next()
+        }
+      },
+      loop () {
+        this.$refs.audio.currentTime = 0
+        this.$refs.audio.play()
+        this.setPlayingState(true)
+      },
       next () {
         if (!this.songReady) {
           return
         }
-        let index = this.currentIndex + 1
-        if (index === this.playList.length) {
-          index = 0
+        if (this.playList.length === 1) {
+          this.loop()
+        } else {
+          let index = this.currentIndex + 1
+          if (index === this.playList.length) {
+            index = 0
+          }
+          this.setCurrentIndex(index)
+          if (!this.playing) {
+            this.togglePlaying()
+          }
         }
-        this.setCurrentIndex(index)
-        if (!this.playing) {
-          this.togglePlaying()
-        }
-        this.songReady = false
       },
       prev () {
         if (!this.songReady) {
           return
         }
-        let index = this.currentIndex - 1
-        if (index === -1) {
-          index = this.playList.length - 1
+        if (this.playList.length === 1) {
+          this.loop()
+        } else {
+          let index = this.currentIndex - 1
+          if (index === -1) {
+            index = this.playList.length - 1
+          }
+          this.setCurrentIndex(index)
+          if (!this.playing) {
+            this.togglePlaying()
+          }
         }
-        this.setCurrentIndex(index)
-        if (!this.playing) {
-          this.togglePlaying()
-        }
-        this.songReady = false
       },
       ready () {
         this.songReady = true
+      },
+      paused () {
+        this.setPlayingState(false)
       },
       error () {
         this.songReady = true
@@ -221,10 +253,29 @@
         return `${minute}:${second}`
       },
       onProgressBarChange (percent) {
-        this.$refs.audio.currentTime = this.currentSong.duration * percent
+        const currentTime = this.currentSong.duration * percent
+        this.currentTime = this.$refs.audio.currentTime = currentTime
         if (!this.playing) {
           this.togglePlaying()
         }
+      },
+      changeMode () {
+        const mode = (this.mode + 1) % 3
+        this.setPlayMode(mode)
+        let list = null
+        if (mode === playMode.random) {
+          list = shuffle(this.sequenceList)
+        } else {
+          list = this.sequenceList
+        }
+        this.resetCurrentIndex(list)
+        this.setPlayList(list)
+      },
+      resetCurrentIndex (list) {
+        let index = list.findIndex((item) => {
+          return item.id === this.currentSong.id
+        })
+        this.setCurrentIndex(index)
       },
       _pad (num, n = 2) {
         let len = num.toString().length
@@ -247,23 +298,63 @@
           x, y, scale
         }
       },
+      /**
+       * 计算内层Image的transform，并同步到外层容器
+       * @param wrapper
+       * @param inner
+       */
+      syncWrapperTransform (wrapper, inner) {
+        if (!this.$refs[wrapper]) {
+          return
+        }
+        let imageWrapper = this.$refs[wrapper]
+        let image = this.$refs[inner]
+        let wTransform = getComputedStyle(imageWrapper)[transform]
+        let iTransform = getComputedStyle(image)[transform]
+        imageWrapper.style[transform] = wTransform === 'none' ? iTransform : iTransform.concat(' ', wTransform)
+      },
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN',
         setPlayingState: 'SET_PLAYING_STATE',
-        setCurrentIndex: 'SET_CURRENT_INDEX'
+        setCurrentIndex: 'SET_CURRENT_INDEX',
+        setPlayMode: 'SET_PLAY_MODE',
+        setPlayList: 'SET_PLAY_LIST'
       })
     },
     watch: {
-      currentSong () {
+      currentSong (newSong, oldSong) {
+        if (!newSong.id || !newSong.url || newSong.id === oldSong.id) {
+          return
+        }
+        this.songReady = false
+        this.$refs.audio.src = newSong.url
+        this.$refs.audio.play()
         this.$nextTick(() => {
           this.$refs.audio.play()
         })
       },
       playing (newPlaying) {
+        if (!this.songReady) {
+          return
+        }
         const audio = this.$refs.audio
         this.$nextTick(() => {
           newPlaying ? audio.play() : audio.pause()
         })
+        if (!newPlaying) {
+          if (this.fullScreen) {
+            this.syncWrapperTransform('imageWrapper', 'image')
+          } else {
+            this.syncWrapperTransform('miniWrapper', 'miniImage')
+          }
+        }
+      },
+      fullScreen (newVal) {
+        if (newVal) {
+          setTimeout(() => {
+            this.$refs.progressBar.setProgressOffset(this.percent)
+          }, 20)
+        }
       }
     },
     components: {
