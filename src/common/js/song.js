@@ -2,6 +2,7 @@
 
 import {getSongsUrl, getLyric} from '../../api/songs'
 import {ERR_OK} from '../../api/config'
+import {Base64} from 'js-base64'
 
 export default class Song {
   constructor ({id, mid, singer, name, album, duration, image, url}) {
@@ -17,11 +18,19 @@ export default class Song {
   }
 
   getLyric () {
-    getLyric(this.mid).then((res) => {
-      if (res.retcode === ERR_OK) {
-        this.lyric = res.lyric
-        console.log('lyric: ' + res.lyric)
-      }
+    // 相当于缓存, 若已有歌词, 不重复调用接口
+    if (this.lyric) {
+      return Promise.resolve(this.lyric)
+    }
+    return new Promise((resolve, reject) => {
+      getLyric(this.mid).then((res) => {
+        if (res.retcode === ERR_OK) {
+          this.lyric = Base64.decode(res.lyric)
+          resolve(this.lyric)
+        } else {
+          reject(new Error('no lyric'))
+        }
+      })
     })
   }
 }
