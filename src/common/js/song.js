@@ -1,6 +1,7 @@
 // Created by CunjunWang on 2019-05-25
 
-import {getSongsUrl} from '../../api/songs'
+import {getSongsUrl, getLyric} from '../../api/songs'
+import {ERR_OK} from '../../api/config'
 
 export default class Song {
   constructor ({id, mid, singer, name, album, duration, image, url}) {
@@ -13,6 +14,15 @@ export default class Song {
     this.image = image
     this.filename = `C400${this.mid}.m4a`
     this.url = url
+  }
+
+  getLyric () {
+    getLyric(this.mid).then((res) => {
+      if (res.retcode === ERR_OK) {
+        this.lyric = res.lyric
+        console.log('lyric: ' + res.lyric)
+      }
+    })
   }
 }
 
