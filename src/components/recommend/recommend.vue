@@ -1,5 +1,5 @@
 <template>
-  <div class="recommend">
+  <div class="recommend" ref="recommend">
     <scroll ref="scroll" class="recommend-content" :data="discList">
       <div>
         <!-- 添加v-if: 因为recommends是异步获取数据, 确保recommends有数据后再执行后续操作.
@@ -42,8 +42,10 @@
   import {ERR_OK} from '../../api/config'
   import Slider from '../../base/slider/slider'
   import Scroll from '../../base/scroll/scroll'
+  import {playListMixin} from '../../common/js/mixin'
 
   export default {
+    mixins: [playListMixin],
     data () {
       return {
         recommends: [],
@@ -74,6 +76,11 @@
           this.$refs.scroll.refresh()
           this.checkLoaded = true
         }
+      },
+      handlePlayList (playList) {
+        const bottom = playList.length > 0 ? '60px' : ''
+        this.$refs.recommend.style.bottom = bottom
+        this.$refs.scroll.refresh()
       }
     },
     components: {
