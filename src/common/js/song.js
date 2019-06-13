@@ -49,6 +49,10 @@ export function createSong (musicData) {
   })
 }
 
+export function isValidMusic (musicData) {
+  return musicData.songid && musicData.albummid && (!musicData.pay || musicData.pay.payalbumprice === 0)
+}
+
 export function processSongsUrl (songs) {
   if (!songs.length) {
     return Promise.resolve(songs)

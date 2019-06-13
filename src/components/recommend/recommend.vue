@@ -6,18 +6,20 @@
        最明显的坑就是在slider.vue的mounted方法中, 由于recommends没数据而遍历先结束了,
        导致添加的css效果出不来 -->
         <div v-if="recommends.length" class="slider-wrapper">
-          <slider>
-            <div v-for="item in recommends">
-              <a :href="item.linkUrl">
-                <img class="needsclick" @load="loadImage" :src="item.picUrl"/>
-              </a>
-            </div>
-          </slider>
+          <div class="slider-content">
+            <slider ref="slider">
+              <div v-for="(item, index) in recommends" :key="index">
+                <a :href="item.linkUrl">
+                  <img @load="loadImage" :src="item.picUrl"/>
+                </a>
+              </div>
+            </slider>
+          </div>
         </div>
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
           <ul>
-            <li v-for="item in discList" class="item">
+            <li @click="selectItem(item)" v-for="(item, index) in discList" class="item" :key="index">
               <div class="icon">
                 <img width="60" height="60" v-lazy="item.imgurl"/>
               </div>
@@ -33,6 +35,7 @@
         <loading></loading>
       </div>
     </scroll>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -43,6 +46,7 @@
   import Slider from '../../base/slider/slider'
   import Scroll from '../../base/scroll/scroll'
   import {playListMixin} from '../../common/js/mixin'
+  import {mapMutations} from 'vuex'
 
   export default {
     mixins: [playListMixin],
@@ -56,7 +60,31 @@
       this._getRecommend()
       this._getDiscList()
     },
+    activated () {
+      setTimeout(() => {
+        this.$refs.slider && this.$refs.slider.refresh()
+      }, 20)
+    },
     methods: {
+      handlePlayList (playList) {
+        const bottom = playList.length > 0 ? '60px' : ''
+        this.$refs.recommend.style.bottom = bottom
+        this.$refs.scroll.refresh()
+      },
+      loadImage () {
+        if (!this.checkloaded) {
+          this.checkloaded = true
+          setTimeout(() => {
+            this.$refs.scroll.refresh()
+          }, 20)
+        }
+      },
+      selectItem (item) {
+        this.$router.push({
+          path: `/recommend/${item.dissid}`
+        })
+        this.setDisc(item)
+      },
       _getRecommend () {
         getRecommend().then((res) => {
           if (res.code === ERR_OK) {
@@ -71,17 +99,9 @@
           }
         })
       },
-      loadImage () {
-        if (!this.checkLoaded) {
-          this.$refs.scroll.refresh()
-          this.checkLoaded = true
-        }
-      },
-      handlePlayList (playList) {
-        const bottom = playList.length > 0 ? '60px' : ''
-        this.$refs.recommend.style.bottom = bottom
-        this.$refs.scroll.refresh()
-      }
+      ...mapMutations({
+        setDisc: 'SET_DISC'
+      })
     },
     components: {
       Slider,
