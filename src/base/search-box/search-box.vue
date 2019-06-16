@@ -2,12 +2,14 @@
   <div class="search-box">
     <i class="icon-search"></i>
     <!-- v-model: 双向绑定数据 -->
-    <input class="box" :placeholder="placeholder" v-model="query">
+    <input ref="query" class="box" :placeholder="placeholder" v-model="query">
     <i @click="clear" class="icon-dismiss" v-show="query"></i>
   </div>
 </template>
 
 <script>
+  import {debounce} from '../../common/js/utils'
+
   export default {
     props: {
       placeholder: {
@@ -22,9 +24,9 @@
     },
     // 使用created hook去监听query变化, 而不是使用watch的理由:
     created () {
-      this.$watch('query', (newQuery) => {
+      this.$watch('query', debounce((newQuery) => {
         this.$emit('query', newQuery)
-      })
+      }, 200))
     },
     methods: {
       clear () {
@@ -32,6 +34,9 @@
       },
       setQuery (query) {
         this.query = query
+      },
+      blur () {
+        this.$refs.query.blur()
       }
     }
   }

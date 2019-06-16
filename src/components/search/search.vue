@@ -1,9 +1,9 @@
 <template>
   <div class="search">
     <div class="search-box-wrapper">
-      <search-box ref="searchBox"></search-box>
+      <search-box ref="searchBox" @query="onQueryChange"></search-box>
     </div>
-    <div class="shortcut-wrapper">
+    <div class="shortcut-wrapper" v-show="!query">
       <div class="shortcut">
         <div class="hot-key">
           <h1 class="title">热门搜索</h1>
@@ -15,6 +15,10 @@
         </div>
       </div>
     </div>
+    <div class="search-result" v-show="query">
+      <suggest @listScroll="blurInput" :query="query"></suggest>
+    </div>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -22,6 +26,8 @@
   import SearchBox from '../../base/search-box/search-box'
   import {getHotKey} from '../../api/search'
   import {ERR_OK} from '../../api/config'
+  import Suggest from '../suggest/suggest'
+  import {playListMixin} from '../../common/js/mixin'
 
   export default {
     created () {
@@ -29,12 +35,24 @@
     },
     data () {
       return {
-        hotKey: []
+        hotKey: [],
       }
     },
     methods: {
+      mixins: [playListMixin],
+      handlePlayList (playList) {
+        const bottom = playList.length > 0 ? '60px' : ''
+        this.$refs.searchResult.style.bottom = bottom
+        this.$refs.suggest.refresh()
+      },
       addQuery (query) {
         this.$refs.searchBox.setQuery(query)
+      },
+      onQueryChange (query) {
+        this.query = query
+      },
+      blurInput () {
+        this.$refs.searchBox.blur()
       },
       _getHotKey () {
         getHotKey().then((res) => {
@@ -45,7 +63,8 @@
       }
     },
     components: {
-      SearchBox
+      SearchBox,
+      Suggest
     }
   }
 </script>
