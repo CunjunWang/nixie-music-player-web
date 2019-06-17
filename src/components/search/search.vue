@@ -14,9 +14,17 @@
           </ul>
         </div>
       </div>
+      <div class="search-history" v-show="searchHistory.length">
+        <h1 class="title">
+          <span class="text">搜索历史</span>
+          <span class="clear">
+            <i class="icon-clear"></i>
+          </span>
+        </h1>
+      </div>
     </div>
     <div class="search-result" v-show="query">
-      <suggest @listScroll="blurInput" :query="query"></suggest>
+      <suggest @select="saveSearch" @listScroll="blurInput" :query="query"></suggest>
     </div>
     <router-view></router-view>
   </div>
@@ -28,6 +36,7 @@
   import {ERR_OK} from '../../api/config'
   import Suggest from '../suggest/suggest'
   import {playListMixin} from '../../common/js/mixin'
+  import {mapActions, mapGetters} from 'vuex'
 
   export default {
     created () {
@@ -35,8 +44,13 @@
     },
     data () {
       return {
-        hotKey: [],
+        hotKey: []
       }
+    },
+    computed: {
+      ...mapGetters([
+        'searchHistory'
+      ])
     },
     methods: {
       mixins: [playListMixin],
@@ -54,13 +68,19 @@
       blurInput () {
         this.$refs.searchBox.blur()
       },
+      saveSearch () {
+        this.saveSearchHistory(this.query)
+      },
       _getHotKey () {
         getHotKey().then((res) => {
           if (res.code === ERR_OK) {
             this.hotKey = res.data.hotkey.slice(0, 10)
           }
         })
-      }
+      },
+      ...mapActions([
+        'saveSearchHistory'
+      ])
     },
     components: {
       SearchBox,

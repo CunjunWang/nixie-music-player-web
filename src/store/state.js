@@ -1,6 +1,7 @@
 // Created by CunjunWang on 2019-05-25
 
 import {playMode} from '../common/js/config'
+import {loadSearch} from '../common/js/cache'
 
 const state = {
   singer: {},
@@ -17,7 +18,8 @@ const state = {
   // 当前播放歌曲index
   currentIndex: -1,
   disc: {},
-  topList: {}
+  topList: {},
+  searchHistory: loadSearch()
 }
 
 export default state
