@@ -6,6 +6,24 @@ import {getUid} from '../common/js/uid'
 
 const debug = process.env.NODE_ENV !== 'production'
 
+export function getLyric (mid) {
+  const url = debug ? '/api/lyric' : 'https://nixie-music-player.herokuapp.com/api/lyric'
+  const data = Object.assign({}, commonParameter, {
+    songmid: mid,
+    platform: 'yqq',
+    hostUin: 0,
+    needNewCode: 0,
+    categoryId: 10000000,
+    pcachetime: +new Date(),
+    format: 'json'
+  })
+  return axios.get(url, {
+    params: data
+  }).then((res) => {
+    return Promise.resolve(res.data)
+  })
+}
+
 export function getSongsUrl (songs) {
   const url = debug ? '/api/getPurlUrl' : 'https://nixie-music-player.herokuapp.com/api/getPurlUrl'
 
@@ -85,21 +103,4 @@ function genUrlMid (mids, types) {
       platform: '23'
     }
   }
-}
-
-export function getLyric (mid) {
-  const url = debug ? '/api/lyric' : 'https://nixie-music-player.herokuapp.com/api/lyric'
-  const data = Object.assign({}, commonParameter, {
-    songmid: mid,
-    pcachetime: new Date(),
-    platform: 'yqq',
-    hostUin: 0,
-    needNewCode: 0,
-    g_tk: 67232076,
-    format: 'json'
-  })
-  return axios.get(url, {params: data})
-    .then((res) => {
-      return Promise.resolve(res.data)
-    })
 }
