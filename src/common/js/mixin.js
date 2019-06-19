@@ -1,6 +1,6 @@
 // Created by CunjunWang on 2019-06-07
 
-import {mapGetters} from 'vuex'
+import {mapGetters, mapActions} from 'vuex'
 
 export const playListMixin = {
   computed: {
@@ -23,5 +23,38 @@ export const playListMixin = {
     handlePlayList () {
       throw new Error('component must implement handlePlayList method')
     }
+  }
+}
+
+export const searchMixin = {
+  data () {
+    return {
+      query: '',
+      refreshDelay: 120
+    }
+  },
+  computed: {
+    ...mapGetters([
+      'searchHistory'
+    ])
+  },
+  methods: {
+    onQueryChange (query) {
+      // 处理带空格的情况
+      this.query = query.trim()
+    },
+    blurInput () {
+      this.$refs.searchBox.blur()
+    },
+    addQuery (query) {
+      this.$refs.searchBox.setQuery(query)
+    },
+    saveSearch () {
+      this.saveSearchHistory(this.query)
+    },
+    ...mapActions([
+      'saveSearchHistory',
+      'deleteSearchHistory'
+    ])
   }
 }
