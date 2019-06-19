@@ -4,8 +4,10 @@ import {commonParameter, ERR_OK} from './config'
 import axios from 'axios'
 import {getUid} from '../common/js/uid'
 
+const debug = process.env.NODE_ENV !== 'production'
+
 export function getSongsUrl (songs) {
-  const url = '/api/getPurlUrl'
+  const url = debug ? '/api/getPurlUrl' : 'https://nixie-music-player.herokuapp.com/api/getPurlUrl'
 
   let mids = []
   let types = []
