@@ -88,7 +88,7 @@ function genUrlMid (mids, types) {
 }
 
 export function getLyric (mid) {
-  const url = '/api/lyric'
+  const url = debug ? '/api/lyric' : 'https://nixie-music-player.herokuapp.com/api/lyric'
   const data = Object.assign({}, commonParameter, {
     songmid: mid,
     pcachetime: new Date(),
