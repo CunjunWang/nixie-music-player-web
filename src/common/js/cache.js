@@ -20,6 +20,13 @@ function insertArray (arr, val, compare, maxLength) {
   }
 }
 
+function deleteFromArray (arr, compare) {
+  const index = arr.findIndex(compare)
+  if (index > -1) {
+    arr.splice(index, 1)
+  }
+}
+
 // 把query插入到当前搜索历史, 并保存到localStorage
 export function saveSearch (query) {
   let currentSearch = storage.get(SEARCH_KEY, [])
@@ -32,4 +39,18 @@ export function saveSearch (query) {
 
 export function loadSearch () {
   return storage.get(SEARCH_KEY, [])
+}
+
+export function deleteSearch (query) {
+  let currentSearch = storage.get(SEARCH_KEY, [])
+  deleteFromArray(currentSearch, (item) => {
+    return item === query
+  })
+  storage.set(SEARCH_KEY, currentSearch)
+  return currentSearch
+}
+
+export function clearSearch () {
+  storage.remove(SEARCH_KEY)
+  return []
 }
