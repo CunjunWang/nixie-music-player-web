@@ -4,6 +4,7 @@ const express = require('express')
 const path = require('path')
 const serveStatic = require('serve-static')
 const axios = require('axios')
+const bodyParser = require('body-parser')
 
 const app = express()
 app.use(serveStatic(path.join(__dirname, 'dist')))
