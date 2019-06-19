@@ -116,7 +116,7 @@
         } else {
           this.insertSong(item)
         }
-        this.$emit('select')
+        this.$emit('select', item)
       },
       listScroll () {
         this.$emit('listScroll')

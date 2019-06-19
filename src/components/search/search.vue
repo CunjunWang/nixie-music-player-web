@@ -25,11 +25,10 @@
                      :searches="searchHistory"></search-list>
       </div>
     </div>
-    <div class="search-result" v-show="query">
+    <div class="search-result" v-show="query" ref="searchResult">
       <suggest @select="saveSearch" @listScroll="blurInput" :query="query" ref="suggest"></suggest>
     </div>
-    <confirm ref="confirm" @confirm="clearSearchHistory" text="是否清空所有搜索历史"
-             confirmBtnText="清空"></confirm>
+    <confirm ref="confirm" @confirm="clearSearchHistory" text="是否清空所有搜索历史" confirmBtnText="清空"></confirm>
     <router-view></router-view>
   </div>
 </template>
@@ -42,10 +41,11 @@
   import Confirm from '../../base/confirm/confirm'
   import {getHotKey} from '../../api/search'
   import {ERR_OK} from '../../api/config'
-  import {playListMixin} from '../../common/js/mixin'
-  import {mapActions, mapGetters} from 'vuex'
+  import {playListMixin, searchMixin} from '../../common/js/mixin'
+  import {mapActions} from 'vuex'
 
   export default {
+    mixins: [playListMixin, searchMixin],
     created () {
       this._getHotKey()
     },
@@ -55,27 +55,20 @@
       }
     },
     computed: {
-      ...mapGetters([
-        'searchHistory'
-      ])
+      shortcut () {
+        return this.hotKey.concat(this.searchHistory)
+      }
     },
     methods: {
       mixins: [playListMixin],
       handlePlayList (playList) {
-        this.$refs.searchResult.style.bottom = playList.length > 0 ? '60px' : ''
+        const bottom = playList.length > 0 ? '60px' : ''
+
+        this.$refs.searchResult.style.bottom = bottom
         this.$refs.suggest.refresh()
-      },
-      addQuery (query) {
-        this.$refs.searchBox.setQuery(query)
-      },
-      onQueryChange (query) {
-        this.query = query
-      },
-      blurInput () {
-        this.$refs.searchBox.blur()
-      },
-      saveSearch () {
-        this.saveSearchHistory(this.query)
+
+        this.$refs.shortcutWrapper.style.bottom = bottom
+        this.$refs.shortcut.refresh()
       },
       showConfirm () {
         this.$refs.confirm.show()
@@ -88,8 +81,6 @@
         })
       },
       ...mapActions([
-        'saveSearchHistory',
-        'deleteSearchHistory',
         'clearSearchHistory'
       ])
     },
