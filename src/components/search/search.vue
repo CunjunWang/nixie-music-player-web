@@ -5,25 +5,27 @@
     </div>
     <div ref="shortcutWrapper" class="shortcut-wrapper" v-show="!query">
       <scroll :refreshDelay="refreshDelay" ref="shortcut" class="shortcut" :data="shortcut">
-        <div class="hot-key">
-          <h1 class="title">热门搜索</h1>
-          <ul>
-            <li @click="addQuery(item.k)" class="item" v-for="(item, index) in hotKey" :key="index">
-              <span>{{item.k}}</span>
-            </li>
-          </ul>
-        </div>
-      </scroll>
-      <div class="search-history" v-show="searchHistory.length">
-        <h1 class="title">
-          <span class="text">搜索历史</span>
-          <span @click="showConfirm" class="clear">
+        <div>
+          <div class="hot-key">
+            <h1 class="title">热门搜索</h1>
+            <ul>
+              <li @click="addQuery(item.k)" class="item" v-for="(item, index) in hotKey" :key="index">
+                <span>{{item.k}}</span>
+              </li>
+            </ul>
+          </div>
+          <div class="search-history" v-show="searchHistory.length">
+            <h1 class="title">
+              <span class="text">搜索历史</span>
+              <span @click="showConfirm" class="clear">
             <i class="icon-clear"></i>
           </span>
-        </h1>
-        <search-list @delete="deleteSearchHistory" @select="addQuery"
-                     :searches="searchHistory"></search-list>
-      </div>
+            </h1>
+            <search-list @delete="deleteSearchHistory" @select="addQuery"
+                         :searches="searchHistory"></search-list>
+          </div>
+        </div>
+      </scroll>
     </div>
     <div class="search-result" v-show="query" ref="searchResult">
       <suggest @select="saveSearch" @listScroll="blurInput" :query="query" ref="suggest"></suggest>
@@ -83,6 +85,15 @@
       ...mapActions([
         'clearSearchHistory'
       ])
+    },
+    watch: {
+      query (newQuery) {
+        if (!newQuery) {
+          setTimeout(() => {
+            this.$refs.shortcur.refresh()
+          }, 20)
+        }
+      }
     },
     components: {
       SearchBox,
