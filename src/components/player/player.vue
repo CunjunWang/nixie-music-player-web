@@ -34,7 +34,7 @@
                   :data="currentLyric && currentLyric.lines">
             <div class="lyric-wrapper">
               <div v-if="currentLyric">
-                <p ref="lyricLine" class="text"
+                <p ref="lyricLine" class="text" :key="index"
                    :class="{'current': currentLineNum === index}"
                    v-for="(line, index) in currentLyric.lines">{{line.txt}}</p>
               </div>
@@ -95,11 +95,12 @@
             <i @click.stop="togglePlaying" class="icon-mini" :class="miniIcon"></i>
           </progress-circle>
         </div>
-        <div class="control">
+        <div class="control" @click="showPlayList">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
+    <play-list ref="playList"></play-list>
     <audio ref="audio" @playing="ready" @error="error" :src="currentSong.url"
            @timeupdate="updateTime" @pause="paused" @ended="end"></audio>
   </div>
@@ -111,6 +112,7 @@
   import {prefixStyle} from '../../common/js/jsonp'
   import ProgressBar from '../../base/progress-bar/progress-bar'
   import ProgressCircle from '../../base/progress-circle/progress-circle'
+  import PlayList from '../../components/play-list/play-list'
   import {playMode} from '../../common/js/config'
   import {shuffle} from '../../common/js/utils'
   import Lyric from 'lyric-parser'
@@ -391,6 +393,9 @@
         this.$refs.middleL.style.opacity = opacity
         this.$refs.middleL.style[transitionDuration] = `${time}ms`
       },
+      showPlayList () {
+        this.$refs.playList.show()
+      },
       _pad (num, n = 2) {
         let len = num.toString().length
         while (len < n) {
@@ -478,7 +483,8 @@
     components: {
       ProgressBar,
       ProgressCircle,
-      Scroll
+      Scroll,
+      PlayList
     }
   }
 </script>
