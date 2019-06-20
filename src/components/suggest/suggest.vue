@@ -1,14 +1,13 @@
 <template>
-  <scroll class="suggest"
+  <scroll ref="suggest"
+          class="suggest"
           :data="result"
           :pullup="pullup"
           :beforeScroll="beforeScroll"
           @scrollToEnd="searchMore"
-          @beforeScroll="listScroll"
-          ref="suggest">
+          @beforeScroll="listScroll">
     <ul class="suggest-list">
-      <li v-for="(item, index) in result" :key="index" class="suggest-item"
-          @click="selectItem(item)">
+      <li v-for="(item, index) in result" :key="index" class="suggest-item" @click="selectItem(item)">
         <div class="icon">
           <i :class="getIconCls(item)"></i>
         </div>
@@ -39,13 +38,13 @@
 
   export default {
     props: {
-      query: {
-        type: String,
-        default: ''
-      },
       showSinger: {
         type: Boolean,
         default: true
+      },
+      query: {
+        type: String,
+        default: ''
       }
     },
     data () {

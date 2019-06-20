@@ -9,7 +9,7 @@
           <div class="hot-key">
             <h1 class="title">热门搜索</h1>
             <ul>
-              <li @click="addQuery(item.k)" class="item" v-for="(item, index) in hotKey" :key="index">
+              <li @click="addQuery(item.k)" class="item" v-for="(item,index) in hotKey" :key="index">
                 <span>{{item.k}}</span>
               </li>
             </ul>
@@ -18,17 +18,16 @@
             <h1 class="title">
               <span class="text">搜索历史</span>
               <span @click="showConfirm" class="clear">
-            <i class="icon-clear"></i>
-          </span>
+                <i class="icon-clear"></i>
+              </span>
             </h1>
-            <search-list @delete="deleteSearchHistory" @select="addQuery"
-                         :searches="searchHistory"></search-list>
+            <search-list @delete="deleteSearchHistory" @select="addQuery" :searches="searchHistory"></search-list>
           </div>
         </div>
       </scroll>
     </div>
     <div class="search-result" v-show="query" ref="searchResult">
-      <suggest @select="saveSearch" @listScroll="blurInput" :query="query" ref="suggest"></suggest>
+      <suggest @listScroll="blurInput" @select="saveSearch" ref="suggest" :query="query"></suggest>
     </div>
     <confirm ref="confirm" @confirm="clearSearchHistory" text="是否清空所有搜索历史" confirmBtnText="清空"></confirm>
     <router-view></router-view>
@@ -62,7 +61,6 @@
       }
     },
     methods: {
-      mixins: [playListMixin],
       handlePlayList (playList) {
         const bottom = playList.length > 0 ? '60px' : ''
 
