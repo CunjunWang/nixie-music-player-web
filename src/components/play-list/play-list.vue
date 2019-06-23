@@ -12,7 +12,7 @@
             </span>
           </h1>
         </div>
-        <scroll class="list-content" :data="sequenceList" ref="listContent">
+        <scroll :refreshDelay="refreshDelay" class="list-content" :data="sequenceList" ref="listContent">
           <transition-group name="list" tag="ul">
             <li class="item" v-for="(item, index) in sequenceList"
                 @click="selectItem(item, index)" :key="item.id" ref="listItem">
