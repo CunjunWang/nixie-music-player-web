@@ -13,9 +13,9 @@
           </h1>
         </div>
         <scroll :refreshDelay="refreshDelay" class="list-content" :data="sequenceList" ref="listContent">
-          <transition-group name="list" tag="ul">
-            <li class="item" v-for="(item, index) in sequenceList"
-                @click="selectItem(item, index)" :key="item.id" ref="listItem">
+          <transition-group ref="list" name="list" tag="ul">
+            <li :key="item.id" class="item" v-for="(item,index) in sequenceList"
+                @click="selectItem(item,index)">
               <i class="current" :class="getCurrentIcon(item)"></i>
               <span class="text">{{item.name}}</span>
               <span class="like">
@@ -56,7 +56,8 @@
     mixins: [playerMixin],
     data () {
       return {
-        showFlag: false
+        showFlag: false,
+        refreshDelay: 120
       }
     },
     computed: {
@@ -69,8 +70,8 @@
         this.showFlag = true
         setTimeout(() => {
           this.$refs.listContent.refresh()
+          this.scrollToCurrent(this.currentSong)
         }, 20)
-        this.scrollToCurrent(this.currentSong)
       },
       hide () {
         this.showFlag = false
@@ -94,14 +95,20 @@
         const index = this.sequenceList.findIndex((song) => {
           return current.id === song.id
         })
-        this.$refs.listContent.scrollToElement(
-          this.$refs.listItem[index], 300)
+        this.$refs.listContent.scrollToElement(this.$refs.list.$el.children[index], 300)
       },
       deleteOne (item) {
+        if (item.deleting) {
+          return
+        }
+        item.deleting = true
         this.deleteSong(item)
         if (!this.playList.length) {
           this.hide()
         }
+        setTimeout(() => {
+          item.deleting = false
+        }, 300)
       },
       showConfirm () {
         this.$refs.confirm.show()
@@ -123,7 +130,9 @@
         if (!this.showFlag || (newSong.id === oldSong.id)) {
           return
         }
-        this.scrollToCurrent(newSong)
+        setTimeout(() => {
+          this.scrollToCurrent(newSong)
+        }, 20)
       }
     },
     components: {

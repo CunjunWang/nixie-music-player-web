@@ -120,6 +120,7 @@
 
   const transform = prefixStyle('transform')
   const transitionDuration = prefixStyle('transitionDuration')
+  const timeExp = /\[(\d{2}):(\d{2}):(\d{2})]/g
 
   export default {
     mixins: [playerMixin],
@@ -131,7 +132,9 @@
         currentLyric: null,
         currentLineNum: 0,
         currentShow: 'cd',
-        playingLyric: ''
+        playingLyric: '',
+        isPureMusic: false,
+        pureMusicLyric: ''
       }
     },
     computed: {
@@ -265,13 +268,23 @@
         this.songReady = false
       },
       ready () {
+        clearTimeout(this.timer)
+        // 监听 playing 这个事件可以确保慢网速或者快速切换歌曲导致的 DOM Exception
         this.songReady = true
+        this.canLyricPlay = true
         this.savePlayHistory(this.currentSong)
+        if (this.currentLyric && !this.isPureMusic) {
+          this.currentLyric.seek(this.currentTime * 1000)
+        }
       },
       paused () {
         this.setPlayingState(false)
+        if (this.currentLyric) {
+          this.currentLyric.stop()
+        }
       },
       error () {
+        clearTimeout(this.timer)
         this.songReady = true
       },
       updateTime (e) {
@@ -297,9 +310,19 @@
       getLyric () {
         // 获取并解析歌词
         this.currentSong.getLyric().then((lyric) => {
+          if (this.currentSong.lyric !== lyric) {
+            return
+          }
           this.currentLyric = new Lyric(lyric, this.handleLyric)
-          if (this.playing) {
-            this.currentLyric.play()
+          this.isPureMusic = !this.currentLyric.lines.length
+          if (this.isPureMusic) {
+            this.pureMusicLyric = this.currentLyric.lrc.replace(timeExp, '').trim()
+            this.playingLyric = this.pureMusicLyric
+          } else {
+            if (this.playing && this.canLyricPlay) {
+              // 这个时候有可能用户已经播放了歌曲，要切到对应位置
+              this.currentLyric.seek(this.currentTime * 1000)
+            }
           }
         }).catch(() => {
           this.currentLyric = null
@@ -308,6 +331,9 @@
         })
       },
       handleLyric ({lineNum, txt}) {
+        if (!this.$refs.lyricLine) {
+          return
+        }
         this.currentLineNum = lineNum
         if (lineNum > 5) {
           let lineEl = this.$refs.lyricLine[lineNum - 5]
@@ -316,6 +342,9 @@
           this.$refs.lyricList.scrollTo(0, 0, 1000)
         }
         this.playingLyric = txt
+      },
+      showPlayList () {
+        this.$refs.playList.show()
       },
       middleTouchStart (e) {
         this.touch.initiated = true
@@ -370,9 +399,6 @@
         this.$refs.middleL.style.opacity = opacity
         this.$refs.middleL.style[transitionDuration] = `${time}ms`
       },
-      showPlayList () {
-        this.$refs.playList.show()
-      },
       _pad (num, n = 2) {
         let len = num.toString().length
         while (len < n) {
@@ -421,16 +447,24 @@
         if (!newSong.id || !newSong.url || newSong.id === oldSong.id) {
           return
         }
+        this.songReady = false
+        this.canLyricPlay = false
         if (this.currentLyric) {
           this.currentLyric.stop()
+          // 重置为null
+          this.currentLyric = null
+          this.currentTime = 0
+          this.playingLyric = ''
+          this.currentLineNum = 0
         }
-        this.songReady = false
         this.$refs.audio.src = newSong.url
         this.$refs.audio.play()
-        setTimeout(() => {
-          this.$refs.audio.play()
-          this.getLyric()
-        }, 1000)
+        // 若歌曲 5s 未播放，则认为超时，修改状态确保可以切换歌曲。
+        clearTimeout(this.timer)
+        this.timer = setTimeout(() => {
+          this.songReady = true
+        }, 5000)
+        this.getLyric()
       },
       playing (newPlaying) {
         if (!this.songReady) {
@@ -451,6 +485,7 @@
       fullScreen (newVal) {
         if (newVal) {
           setTimeout(() => {
+            this.$refs.lyricList.refresh()
             this.$refs.progressBar.setProgressOffset(this.percent)
           }, 20)
         }

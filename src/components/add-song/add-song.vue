@@ -8,13 +8,13 @@
         </div>
       </div>
       <div class="search-box-wrapper">
-        <search-box ref="searchBox" @query="search" placeholder="搜索歌曲"></search-box>
+        <search-box ref="searchBox" @query="onQueryChange" placeholder="搜索歌曲"></search-box>
       </div>
       <div class="shortcut" v-show="!query">
         <switches :switches="switches" :currentIndex="currentIndex"
                   @switch="switchItem"></switches>
         <div class="list-wrapper">
-          <scroll :refreshDelay="refreshDelay" ref="songList" class="list-scroll" v-if="currentIndex === 0"
+          <scroll ref="songList" class="list-scroll" v-if="currentIndex === 0"
                   :data="playHistory">
             <div class="list-inner">
               <song-list :songs="playHistory" @select="selectSong"></song-list>
@@ -30,14 +30,14 @@
         </div>
       </div>
       <div class="search-result" v-show="query">
-        <suggest :query="query" :show-singer="showSinger"
+        <suggest :query="query" :showSinger="showSinger"
                  @select="selectSuggest"
                  @listScroll="blurInput"></suggest>
       </div>
       <top-tip ref="topTip">
         <div class="tip-title">
           <i class="icon-ok"></i>
-          <span class="text">歌曲添加到播放列表</span>
+          <span class="text">歌曲已添加到播放列表</span>
         </div>
       </top-tip>
     </div>
@@ -63,6 +63,7 @@
         showFlag: false,
         showSinger: false,
         currentIndex: 0,
+        songs: [],
         switches: [
           {name: '最近播放'},
           {name: '搜索历史'}
@@ -77,11 +78,13 @@
     methods: {
       show () {
         this.showFlag = true
+        this.refreshList()
+      },
+      refreshList () {
         setTimeout(() => {
           if (this.currentIndex === 0) {
             this.$refs.songList.refresh()
-          }
-          if (this.currentIndex === 1) {
+          } else {
             this.$refs.searchList.refresh()
           }
         }, 20)
@@ -90,8 +93,8 @@
         this.showFlag = false
       },
       selectSuggest () {
+        this.$refs.topTip.show()
         this.saveSearch()
-        this.showTip()
       },
       switchItem (index) {
         this.currentIndex = index
@@ -99,15 +102,19 @@
       selectSong (song, index) {
         if (index !== 0) {
           this.insertSong(new Song(song))
-          this.showTip()
+          this.$refs.topTip.show()
         }
-      },
-      showTip () {
-        this.$refs.topTip.show()
       },
       ...mapActions([
         'insertSong'
       ])
+    },
+    watch: {
+      query (newVal) {
+        if (!newVal) {
+          this.refreshList()
+        }
+      }
     },
     components: {
       SearchBox,
@@ -130,7 +137,6 @@
     top: 0
     bottom: 0
     width: 100%
-    /*控制全屏展示盖住之前的层*/
     z-index: 200
     background: $color-background
 
