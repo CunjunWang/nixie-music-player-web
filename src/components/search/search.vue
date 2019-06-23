@@ -47,9 +47,6 @@
 
   export default {
     mixins: [playListMixin, searchMixin],
-    created () {
-      this._getHotKey()
-    },
     data () {
       return {
         hotKey: []
@@ -59,6 +56,9 @@
       shortcut () {
         return this.hotKey.concat(this.searchHistory)
       }
+    },
+    created () {
+      this._getHotKey()
     },
     methods: {
       handlePlayList (playList) {
@@ -88,7 +88,7 @@
       query (newQuery) {
         if (!newQuery) {
           setTimeout(() => {
-            this.$refs.shortcur.refresh()
+            this.$refs.shortcut.refresh()
           }, 20)
         }
       }

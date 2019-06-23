@@ -51,7 +51,8 @@
             <div class="progress-bar-wrapper">
               <progress-bar ref="progressBar"
                             :percent="percent"
-                            @percentChange="onProgressBarChange">
+                            @percentChange="onProgressBarChange"
+                            @percentChanging="onProgressBarChanging">
               </progress-bar>
             </div>
             <span class="time time-r">{{format(currentSong.duration)}}</span>
@@ -64,7 +65,7 @@
               <i @click="prev" class="icon-prev"></i>
             </div>
             <div class="icon i-center" :class="disableCls">
-              <i @click="togglePlaying" :class="playIcon"></i>
+              <i class="needsClick" @click="togglePlaying" :class="playIcon"></i>
             </div>
             <div class="icon i-right" :class="disableCls">
               <i @click="next" class="icon-next"></i>
@@ -101,7 +102,7 @@
       </div>
     </transition>
     <play-list ref="playList"></play-list>
-    <audio ref="audio" @playing="ready" @error="error" :src="currentSong.url"
+    <audio ref="audio" @playing="ready" @error="error"
            @timeupdate="updateTime" @pause="paused" @ended="end"></audio>
   </div>
 </template>
@@ -126,9 +127,9 @@
     mixins: [playerMixin],
     data () {
       return {
-        radius: 32,
         songReady: false,
         currentTime: 0,
+        radius: 32,
         currentLyric: null,
         currentLineNum: 0,
         currentShow: 'cd',
@@ -200,7 +201,11 @@
         this.$refs.cdWrapper.style.transition = 'all 0.4s'
         const {x, y, scale} = this._getPosAndScale()
         this.$refs.cdWrapper.style[transform] = `translate3d(${x}px, ${y}px, 0) scale(${scale})`
-        this.$refs.cdWrapper.addEventListener('transitionend', done)
+        const timer = setTimeout(done, 400)
+        this.$refs.cdWrapper.addEventListener('transitionend', () => {
+          clearTimeout(timer)
+          done()
+        })
       },
       afterLeave () {
         this.$refs.cdWrapper.style.transition = ''
@@ -228,7 +233,7 @@
         this.$refs.audio.play()
         this.setPlayingState(true)
         if (this.currentLyric) {
-          this.currentLyric.seek()
+          this.currentLyric.seek(0)
         }
       },
       next () {
@@ -247,7 +252,6 @@
             this.togglePlaying()
           }
         }
-        this.songReady = false
       },
       prev () {
         if (!this.songReady) {
@@ -265,7 +269,6 @@
             this.togglePlaying()
           }
         }
-        this.songReady = false
       },
       ready () {
         clearTimeout(this.timer)
@@ -297,14 +300,20 @@
         const second = this._pad(interval % 60)
         return `${minute}:${second}`
       },
+      onProgressBarChanging (percent) {
+        this.currentTime = this.currentSong.duration * percent
+        if (this.currentLyric) {
+          this.currentLyric.seek(this.currentTime * 1000)
+        }
+      },
       onProgressBarChange (percent) {
         const currentTime = this.currentSong.duration * percent
-        this.$refs.audio.currentTime = currentTime
-        if (!this.playing) {
-          this.togglePlaying()
-        }
+        this.currentTime = this.$refs.audio.currentTime = currentTime
         if (this.currentLyric) {
           this.currentLyric.seek(currentTime * 1000)
+        }
+        if (!this.playing) {
+          this.togglePlaying()
         }
       },
       getLyric () {
@@ -348,6 +357,8 @@
       },
       middleTouchStart (e) {
         this.touch.initiated = true
+        // 用来判断是否是一次移动
+        this.touch.moved = false
         const touch = e.touches[0]
         this.touch.startX = touch.pageX
         this.touch.startY = touch.pageY
@@ -363,6 +374,9 @@
         if (Math.abs(deltaY) > Math.abs(deltaX)) {
           return
         }
+        if (!this.touch.moved) {
+          this.touch.moved = true
+        }
         const left = this.currentShow === 'cd' ? 0 : -window.innerWidth
         const offsetWidth = Math.min(0, Math.max(-window.innerWidth, left + deltaX))
         this.touch.percent = Math.abs(offsetWidth / window.innerWidth)
@@ -372,6 +386,9 @@
         this.$refs.middleL.style[transitionDuration] = 0
       },
       middleTouchEnd () {
+        if (!this.touch.moved) {
+          return
+        }
         let offsetWidth
         let opacity
         if (this.currentShow === 'cd') {
@@ -398,6 +415,7 @@
         this.$refs.lyricList.$el.style[transitionDuration] = `${time}ms`
         this.$refs.middleL.style.opacity = opacity
         this.$refs.middleL.style[transitionDuration] = `${time}ms`
+        this.touch.initiated = false
       },
       _pad (num, n = 2) {
         let len = num.toString().length

@@ -4,8 +4,9 @@
 import storage from 'good-storage'
 
 const SEARCH_KEY = '__search__'
-const PLAY_KEY = '__play__'
 const SEARCH_MAX_LENGTH = 15
+
+const PLAY_KEY = '__play__'
 const PLAY_MAX_LENGTH = 200
 
 function insertArray (arr, val, compare, maxLength) {

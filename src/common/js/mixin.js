@@ -58,14 +58,14 @@ export const playerMixin = {
         return item.id === this.currentSong.id
       })
       this.setCurrentIndex(index)
-    }
-  },
-  ...mapMutations({
-    setPlayingState: 'SET_PLAYING_STATE',
-    setCurrentIndex: 'SET_CURRENT_INDEX',
-    setPlayMode: 'SET_PLAY_MODE',
-    setPlayList: 'SET_PLAY_LIST'
-  })
+    },
+    ...mapMutations({
+      setPlayingState: 'SET_PLAYING_STATE',
+      setCurrentIndex: 'SET_CURRENT_INDEX',
+      setPlayMode: 'SET_PLAY_MODE',
+      setPlayList: 'SET_PLAY_LIST'
+    })
+  }
 }
 
 export const searchMixin = {
