@@ -63,7 +63,7 @@ export function savePlay (song) {
   insertArray(songs, song, (item) => {
     return item.id === song.id
   }, PLAY_MAX_LENGTH)
-  storage.get(PLAY_KEY, songs)
+  storage.set(PLAY_KEY, songs)
   return songs
 }
 
