@@ -11,14 +11,30 @@
         <i class="icon-play"></i>
         <span class="text">随机播放全部</span>
       </div>
-      <div class="list-wrapper" ref="listWrapper"></div>
+      <div class="list-wrapper" ref="listWrapper">
+        <scroll ref="favoriteList" class="list-scroll" v-if="currentIndex === 0"
+                :data="favoriteList">
+          <div class="list-inner">
+            <song-list :songs="favoriteList" @select="selectSong"></song-list>
+          </div>
+        </scroll>
+        <scroll ref="playList" class="list-scroll" v-if="currentIndex === 1"
+                :data="playHistory">
+          <div class="list-inner">
+            <song-list :songs="playHistory" @select="selectSong"></song-list>
+          </div>
+        </scroll>
+      </div>
     </div>
   </transition>
 </template>
 
 <script type="text/ecmascript-6">
   import Switches from '../../base/switches/switches'
-  import {mapActions} from 'vuex'
+  import Scroll from '../../base/scroll/scroll'
+  import SongList from '../../base/song-list/song-list'
+  import {mapActions, mapGetters} from 'vuex'
+  import Song from '../../common/js/song'
 
   export default {
     data () {
@@ -30,16 +46,30 @@
         ]
       }
     },
+    computed: {
+      ...mapGetters([
+        'favoriteList',
+        'playHistory'
+      ])
+    },
     methods: {
       back () {
         this.$router.back()
       },
       switchItem (index) {
         this.currentIndex = index
-      }
+      },
+      selectSong (song) {
+        this.insertSong(new Song(song))
+      },
+      ...mapActions([
+        'insertSong'
+      ])
     },
     components: {
-      Switches
+      Switches,
+      Scroll,
+      SongList
     }
   }
 </script>
