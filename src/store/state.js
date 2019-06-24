@@ -1,7 +1,7 @@
 // Created by CunjunWang on 2019-05-25
 
 import {playMode} from '../common/js/config'
-import {loadPlay, loadSearch} from '../common/js/cache'
+import {loadFavorite, loadPlay, loadSearch} from '../common/js/cache'
 
 const state = {
   singer: {},
@@ -20,7 +20,8 @@ const state = {
   disc: {},
   topList: {},
   searchHistory: loadSearch(),
-  playHistory: loadPlay()
+  playHistory: loadPlay(),
+  favoriteList: loadFavorite()
 }
 
 export default state
