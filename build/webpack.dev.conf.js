@@ -21,13 +21,11 @@ const devWebpackConfig = merge(baseWebpackConfig, {
   devServer: {
     before (app) {
       app.use(bodyParser.urlencoded({extended: true}))
-      const querystring = require('querystring')
 
       app.get('/api/getCarousel', function (req, res) {
         const url = 'http://localhost:9588/carousel/getCarouselList'
-        axios.get(url, {
-          params: req.query
-        }).then((response) => {
+        console.log('url to get carousel: ' + url)
+        axios.get(url).then((response) => {
           res.json(response.data)
         }).catch((e) => {
           console.log(e)
@@ -36,9 +34,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
 
       app.get('/api/getDiscList', function (req, res) {
         const url = 'http://localhost:9588/recommend/getDiscList'
-        axios.get(url, {
-          params: req.query
-        }).then((response) => {
+        axios.get(url).then((response) => {
           res.json(response.data)
         }).catch((e) => {
           console.log(e)
