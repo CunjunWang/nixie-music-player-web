@@ -1,18 +1,21 @@
 // Created by CunjunWang on 2019-05-08
 
-import jsonp from '../common/js/jsonp'
-import {commonParameter, options} from './config'
-import {homeCarouselUrl} from './url'
+import {commonParameter} from './config'
 import axios from 'axios'
 
 // 获取推荐数据
 export function getRecommend () {
+  const url = '/api/getCarousel'
   const data = Object.assign({}, commonParameter, {
     platform: 'h5',
     uin: 0,
     needNewCode: 1
   })
-  return jsonp(homeCarouselUrl, data, options)
+  return axios.get(url, {
+    params: data
+  }).then((res) => {
+    return Promise.resolve(res.data)
+  })
 }
 
 export function getDiscList () {
