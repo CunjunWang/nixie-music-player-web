@@ -21,11 +21,11 @@
           <ul>
             <li @click="selectItem(item)" v-for="(item, index) in discList" class="item" :key="index">
               <div class="icon">
-                <img width="60" height="60" v-lazy="item.imgurl"/>
+                <img width="60" height="60" v-lazy="item.imageUrl"/>
               </div>
               <div class="text">
-                <h2 class="name" v-html="item.creator.name"></h2>
-                <p class="desc" v-html="item.dissname"></p>
+                <h2 class="name" v-html="item.creatorName"></h2>
+                <p class="desc" v-html="item.discName"></p>
               </div>
             </li>
           </ul>
@@ -42,7 +42,7 @@
 <script type="text/ecmascript-6">
   import Loading from '../../base/loading/loading'
   import {getRecommend, getDiscList} from '../../api/recommend'
-  import {ERR_OK} from '../../api/config'
+  import {STATUS_OK} from '../../api/config'
   import Slider from '../../base/slider/slider'
   import Scroll from '../../base/scroll/scroll'
   import {playListMixin} from '../../common/js/mixin'
@@ -81,21 +81,22 @@
       },
       selectItem (item) {
         this.$router.push({
-          path: `/recommend/${item.dissid}`
+          path: `/recommend/${item.discId}`
         })
         this.setDisc(item)
       },
       _getRecommend () {
         getRecommend().then((res) => {
-          if (res.code === ERR_OK) {
-            this.recommends = res.data.slider
+          console.log(res)
+          if (res.status === STATUS_OK) {
+            this.recommends = res.data
           }
         })
       },
       _getDiscList () {
         getDiscList().then((res) => {
-          if (res.code === ERR_OK) {
-            this.discList = res.data.list
+          if (res.status === STATUS_OK) {
+            this.discList = res.data
           }
         })
       },

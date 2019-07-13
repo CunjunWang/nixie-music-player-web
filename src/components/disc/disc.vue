@@ -8,16 +8,16 @@
   import MusicList from '../../components/music-list/music-list'
   import {mapGetters} from 'vuex'
   import {getSongList} from '../../api/recommend'
-  import {ERR_OK} from '../../api/config'
+  import {STATUS_OK} from '../../api/config'
   import {createSong, isValidMusic, processSongsUrl} from '../../common/js/song'
 
   export default {
     computed: {
       title () {
-        return this.disc.dissname
+        return this.disc.discName
       },
       bgImage () {
-        return this.disc.imgurl
+        return this.disc.imageUrl
       },
       ...mapGetters([
         'disc'
@@ -33,13 +33,14 @@
     },
     methods: {
       _getSongList () {
-        if (!this.disc.dissid) {
+        if (!this.disc.discId) {
           this.$router.push('/recommend')
           return
         }
-        getSongList(this.disc.dissid).then((res) => {
-          if (res.code === ERR_OK) {
-            processSongsUrl(this._normalizeSongs(res.cdlist[0].songlist)).then((songs) => {
+        getSongList(this.disc.discId).then((res) => {
+          console.log(res)
+          if (res.status === STATUS_OK) {
+            processSongsUrl(this._normalizeSongs(res.data.songList)).then((songs) => {
               this.songs = songs
             })
           }
