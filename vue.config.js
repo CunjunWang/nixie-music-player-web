@@ -19,7 +19,7 @@ module.exports = {
       })
 
       app.get('/api/getDiscList', function (req, res) {
-        const url = 'http://localhost:9588/recommend/getDiscList'
+        const url = 'http://localhost:9588/disc/getRecommendDiscList'
         axios.get(url).then((response) => {
           res.json(response.data)
         }).catch((e) => {
@@ -28,14 +28,10 @@ module.exports = {
       })
 
       app.get('/api/getCdInfo', function (req, res) {
-        const url = 'https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg'
-        axios.get(url, {
-          headers: {
-            referer: 'https://c.y.qq.com/',
-            host: 'c.y.qq.com'
-          },
-          params: req.query
-        }).then((response) => {
+        const disstid = req.query.disstid
+        const url = 'http://localhost:9588/disc/getSongListByDiscId?discId=' + disstid
+        axios.get(url).then((response) => {
+          console.log('response: ' + response)
           let ret = response.data
           if (typeof ret === 'string') {
             const reg = /^\w+\(({.+})\)$/
